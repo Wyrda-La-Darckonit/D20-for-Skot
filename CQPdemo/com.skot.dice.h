@@ -809,7 +809,63 @@ public: operator_is_not_dm(string str, string recommand = "") :
 };
 
 
+//  ls指令
+string ls(bool sudo, int type, int64_t qq, int64_t gid, vector<string> args)
+{
+	string Ly = "";
 
+	bool help = false;
+	bool ver = false;
+	bool src = false;
+	bool man = false;
+
+	for (int i = 1; i != args.size(); i++)
+	{
+		if (args[i].find("-") == 0)
+		{
+			if (args[i]._Equal("--help")) help = true;
+			else if (args[i]._Equal("--ver")) ver = true;
+			else if (args[i]._Equal("--source")) src = true;
+			else if (args[i]._Equal("--vs")) ver = src = true;
+		}
+		else
+		{
+			anal(args[i]);
+		}
+	}
+
+	if (help) return string("")
+		+ "【用法】\n"
+		+ ".ls\n列出所有可用的指令。\n\n"
+		+ "【参数】\n"
+		+ "--ver\n查看版本信息。\n\n"
+		+ "--source\n获取源码。\n\n"
+		+ "--help\n显示此信息。";
+
+	if (man)
+	{
+		thread sendManual(sendManual_main, sudo, type, qq, gid);
+		sendManual.detach();
+		return "正在发送使用手册……";
+	}
+
+	if (ver || src) return string("")
+		+ CQAPPID + " " + CQAPPVER + "\n"
+		+ (ver ? "Copyright (C) 2019 Skot\n" : "")
+		+ (ver ? "许可证：GPLv3+：GNU通用公共许可证第3版或更新版本<http://gnu.org/licenses/gpl.html>\n" : "")
+		+ (ver ? "本软件是自由软件：您可以自由修改和重新发布它。\n" : "")
+		+ (ver ? "在法律范围内没有其他保障。\n" : "")
+		+ (ver ? "\n" : "")
+		+ (ver ? "由 天意618A03 (95806902) 编写。\n" : "")
+		+ (src ? "源码：https://github.com/Wyrda-La-Darckonit/D20-for-Skot.git" : "");
+
+	return string("")
+		+ "ls - 显示信息\n"
+		+ "setname - 设置称呼\n"
+		+ "d - 掷骰子\n"
+		+ "dm - DM相关\n"
+		+ "ask - 随机问答\n";
+}
 //  setname指令
 string setname(bool sudo, int type, int64_t qq, int64_t gid, vector<string> args)
 {
@@ -955,58 +1011,6 @@ string setname(bool sudo, int type, int64_t qq, int64_t gid, vector<string> args
 	}
 
 	return Ly;
-}
-//  ls指令
-string ls(bool sudo, int type, int64_t qq, int64_t gid, vector<string> args)
-{
-	string Ly = "";
-
-	bool help = false;
-	bool man = false;
-	bool ver = false;
-
-	for (int i = 1; i != args.size(); i++)
-	{
-		if (args[i].find("-") == 0)
-		{
-			if (args[i]._Equal("--help")) help = true;
-			else if (args[i]._Equal("--ver")) ver = true;
-		}
-		else
-		{
-			anal(args[i]);
-		}
-	}
-
-	if (help) return string("")
-		+ "【用法】\n"
-		+ ".ls\n列出所有可用的指令。\n\n"
-		+ "【参数】\n"
-		+ "--ver\n显示版本信息。\n\n"
-		+ "--help\n显示此信息。";
-
-	if (man)
-	{
-		thread sendManual(sendManual_main, sudo, type, qq, gid);
-		sendManual.detach();
-		return "正在发送使用手册……";
-	}
-
-	if (ver) return string("")
-		+ CQAPPID + " " + CQAPPVER + "\n"
-		+ "Copyright (C) 2019 Skot\n"
-		+ "许可证：GPLv3+：GNU通用公共许可证第3版或更新版本<http://gnu.org/licenses/gpl.html>\n"
-		+ "本软件是自由软件：您可以自由修改和重新发布它。\n"
-		+ "在法律范围内没有其他保障。\n"
-		+ "\n"
-		+ "由 天意618A03 (95806902) 编写。\n";
-
-	return string("")
-		+ "ls - 显示信息\n"
-		+ "setname - 设置称呼\n"
-		+ "d - 掷骰子\n"
-		+ "dm - DM相关\n"
-		+ "ask - 随机问答\n";
 }
 //  d指令
 string d(bool sudo, int type, int64_t qq, int64_t gid, vector<string> args)
@@ -1729,9 +1733,9 @@ void run_main(int type, int64_t qq, int64_t gid, string msg)
 	vector<string> args = to_args(msg);
 	if (false);
 	else if (args[0]._Equal("ls"));
+	else if (args[0]._Equal("setname"));
 	else if (args[0]._Equal("d"));
 	else if (args[0]._Equal("dm"));
-	else if (args[0]._Equal("setname"));
 	else if (args[0]._Equal("ask"));
 	else return;
 
