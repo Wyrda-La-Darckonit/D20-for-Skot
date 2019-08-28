@@ -165,6 +165,8 @@ CQEVENT(int32_t, __eventRequest_AddFriend, 24)(int32_t subType, int32_t sendTime
 
 	//CQ_setFriendAddRequest(ac, responseFlag, REQUEST_ALLOW, "");
 
+	CQ_setFriendAddRequest(ac, responseFlag, REQUEST_ALLOW, "");
+
 	return EVENT_IGNORE; //关于返回值说明, 见“_eventPrivateMsg”函数
 }
 
@@ -182,6 +184,8 @@ CQEVENT(int32_t, __eventRequest_AddGroup, 32)(int32_t subType, int32_t sendTime,
 	//} else if (subType == 2) {
 	//	CQ_setGroupAddRequestV2(ac, responseFlag, REQUEST_GROUPINVITE, REQUEST_ALLOW, "");
 	//}
+
+	if (subType == 2) CQ_setGroupAddRequestV2(ac, responseFlag, REQUEST_GROUPINVITE, REQUEST_ALLOW, "");
 
 	return EVENT_IGNORE; //关于返回值说明, 见“_eventPrivateMsg”函数
 }

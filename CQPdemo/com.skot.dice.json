@@ -6,14 +6,16 @@
 
   "author": "天意618A03", // 应用作者
   "name": "D20骰子 for Skot", // 应用名称
-  "version": "2.0.1", // 应用版本
-  "version_id": 2, // 应用顺序版本（每次发布时至少+1）,
+  "version": "2.0.3", // 应用版本
+  "version_id": 4, // 应用顺序版本（每次发布时至少+1）,
   "description": "用于跑团以及其他娱乐活动的骰子。",
 
   "auth": [ // 应用权限（发布前请删除无用权限）
     101, //发送群消息			sendGroupMsg
     103, //发送讨论组消息		sendDiscussMsg
-    106 //发送私聊消息		sendPrivateMsg
+    106, //发送私聊消息		sendPrivateMsg
+    150, //置好友添加请求		setFriendAddRequest
+    151  //置群添加请求		setGroupAddRequest
   ],
 
   "event": [ // 事件列表，同一事件类型可重复定义（发布前请删除无用事件）
@@ -39,6 +41,20 @@
       "priority": 30000
     },
     {
+      "id": 8,
+      "type": 301,
+      "name": "好友添加请求处理",
+      "function": "_eventRequest_AddFriend",
+      "priority": 30000
+    },
+    {
+      "id": 9,
+      "type": 302,
+      "name": "群添加请求处理",
+      "function": "_eventRequest_AddGroup",
+      "priority": 30000
+    },
+    {
       "id": 1002,
       "type": 1002,
       "name": "酷Q关闭事件",
@@ -51,13 +67,6 @@
       "name": "应用已被启用",
       "priority": 30000,
       "function": "_eventEnable"
-    },
-    {
-      "id": 1004,
-      "type": 1004,
-      "name": "应用将被停用",
-      "priority": 30000,
-      "function": "_eventDisable"
     }
   ],
   "ret": 1, // 返回码，固定为1

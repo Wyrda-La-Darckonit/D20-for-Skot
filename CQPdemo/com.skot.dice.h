@@ -1,6 +1,4 @@
 #pragma once
-#include <iostream>
-#include <cstdlib>
 #include <string>
 #include <thread>
 #include <mutex>
@@ -17,7 +15,6 @@
 
 #include "MyCalc.h"
 
-constexpr auto QUIT = -1;
 constexpr auto PVT = 0;
 constexpr auto GRP = 1;
 constexpr auto DIS = 2;
@@ -36,9 +33,9 @@ static string _home_ = "data\\app\\skot\\";
 static string usrDir = _home_ + "usr\\";
 static string tmpDir = _home_ + "tmp\\";
 static string sudoerFile = _home_ + "sudoers.csv";
-static string manFile = _home_ + "manual.txt";
 static string blackFile = _home_ + "blackList.csv";
 
+static string manFile = _home_ + "manual.txt";
 static int64_t superadmin = 95806902;
 
 //	错误：xxxxxx<str>xxxxxx。[recommand]
@@ -52,7 +49,7 @@ static int64_t superadmin = 95806902;
 ///	【发送消息】
 
 //	发送消息
-void PostMsg(int type, int64_t target = 0, string msg = "")
+void sendMsg(int type, int64_t target = 0, string msg = "")
 {
 	switch (type)
 	{
@@ -373,7 +370,7 @@ void sendManual_main(bool sudo, int type, int QQ, int Group)
 			if (P2._Equal(".flush"))
 			{
 				CCC.erase(0, 1);
-				if (!dT || sudo) Sleep(1000), PostMsg(PVT, QQ, CCC);
+				if (!dT || sudo) Sleep(1000), sendMsg(PVT, QQ, CCC);
 				CCC.clear();
 				dT = false;
 			}
@@ -392,13 +389,13 @@ void sendManual_main(bool sudo, int type, int QQ, int Group)
 		if (!CCC.empty())
 		{
 			CCC.erase(0, 1);
-			if (!dT || sudo) Sleep(1000), PostMsg(PVT, QQ, CCC);
+			if (!dT || sudo) Sleep(1000), sendMsg(PVT, QQ, CCC);
 			CCC.clear();
 		}
-		if (type == PVT) PostMsg(PVT, QQ, "使用手册发送完毕。");
-		else PostMsg(type, Group, atQQ(QQ) + "使用手册发送完毕。");
+		if (type == PVT) sendMsg(PVT, QQ, "使用手册发送完毕。");
+		else sendMsg(type, Group, atQQ(QQ) + "使用手册发送完毕。");
 	}
-	else PostMsg(type, (type == PVT ? QQ : Group), manFile_not_found().what());
+	else sendMsg(type, (type == PVT ? QQ : Group), manFile_not_found().what());
 	return;
 }
 
@@ -611,7 +608,6 @@ public:
 	//	is?
 	bool exist_question(string question) { return asK.find(question) != asK.end(); }
 };
-
 //	用户
 class User : public RandomAskManager
 {
@@ -808,10 +804,14 @@ public: operator_is_not_dm(string str, string recommand = "") :
 	exception::exception(("错误：" + str + "需要DM权限。" + recommand).data()) {};
 };
 
-
+//	上一条指令
+map<string, vector<string>> lastArgs;
 //  ls指令
 string ls(bool sudo, int type, int64_t qq, int64_t gid, vector<string> args)
 {
+	lastArgs[to_string(qq) + (gid == 0 ? "" : " in " + to_string(gid))] = args;
+	lastArgs["in " + to_string(gid)] = args;
+
 	string Ly = "";
 
 	bool help = false;
@@ -864,11 +864,16 @@ string ls(bool sudo, int type, int64_t qq, int64_t gid, vector<string> args)
 		+ "setname - 设置称呼\n"
 		+ "d - 掷骰子\n"
 		+ "dm - DM相关\n"
-		+ "ask - 随机问答\n";
+		+ "ask - 随机问答\n"
+		+ "r - 重复" + (gid == 0 ? "" : "自己的") + "上一条指令\n"
+		+ (gid == 0 ? "" : "f - 重复本群的上一条指令\n");
 }
 //  setname指令
 string setname(bool sudo, int type, int64_t qq, int64_t gid, vector<string> args)
 {
+	lastArgs[to_string(qq) + (gid == 0 ? "" : " in " + to_string(gid))] = args;
+	lastArgs["in " + to_string(gid)] = args;
+
 	string Ly = "";
 	bool Sp = false;
 
@@ -1015,6 +1020,9 @@ string setname(bool sudo, int type, int64_t qq, int64_t gid, vector<string> args
 //  d指令
 string d(bool sudo, int type, int64_t qq, int64_t gid, vector<string> args)
 {
+	lastArgs[to_string(qq) + (gid == 0 ? "" : " in " + to_string(gid))] = args;
+	lastArgs["in " + to_string(gid)] = args;
+
 	string Ly = "";
 
 	User Who = User(qq);
@@ -1171,8 +1179,8 @@ string d(bool sudo, int type, int64_t qq, int64_t gid, vector<string> args)
 			vector<int64_t> DMList = Where.alldm();
 
 			if (DMList.empty()) Ly += "（注意，" + Where.alias() + "当前没有DM。）\n";
-			else for (int64_t D2 : DMList) PostMsg(PVT, D2, Ly4DM);
-			if (sudo) PostMsg(PVT, qq, Ly4DM);
+			else for (int64_t D2 : DMList) sendMsg(PVT, D2, Ly4DM);
+			if (sudo) sendMsg(PVT, qq, Ly4DM);
 		}
 	}
 	catch (exception Ed)
@@ -1184,6 +1192,9 @@ string d(bool sudo, int type, int64_t qq, int64_t gid, vector<string> args)
 //  dm指令
 string dm(bool sudo, int type, int64_t qq, int64_t gid, vector<string> args)
 {
+	lastArgs[to_string(qq) + (gid == 0 ? "" : " in " + to_string(gid))] = args;
+	lastArgs["in " + to_string(gid)] = args;
+
 	string Ly = "";
 
 	User Who = User(qq);
@@ -1302,6 +1313,9 @@ string dm(bool sudo, int type, int64_t qq, int64_t gid, vector<string> args)
 //  ask指令
 string ask(bool sudo, int type, int64_t qq, int64_t gid, vector<string> args)
 {
+	lastArgs[to_string(qq) + (gid == 0 ? "" : " in " + to_string(gid))] = args;
+	lastArgs["in " + to_string(gid)] = args;
+
 	string Ly = "";
 
 	User Who = User(qq);
@@ -1335,50 +1349,54 @@ string ask(bool sudo, int type, int64_t qq, int64_t gid, vector<string> args)
 
 	stack<int> ACP;
 	ACP.push(0);
-
-	/*	id = 0	*/	//cp
-	/*	id = 1	*/	//app
-	stack<int> ARC;
+	string lastArg;
 
 	for (int i = 1; i != args.size(); i++)
 	{
-		if (args[i]._Equal("-cover") || args[i]._Equal("-filter") || args[i]._Equal("-mask") || args[i]._Equal("-force")
-			|| args[i]._Equal("-c") || args[i]._Equal("-f") || args[i]._Equal("-m"))
+		if (args[i].find("-") == 0)
 		{
 			normal_ask = false;
-			if (args[i]._Equal("-f") && ARC.empty())
-				throw (arg_illegal(args[i], "这个参数只能用于修饰-cp或-app。"));
-			else if (args[i]._Equal("-force") && (ARC.empty() || ARC.top() != 1))
-				throw (arg_illegal(args[i], "这个参数只能用于修饰-app。"));
-			else if (ARC.empty() || ARC.top() != 0)
-				throw (arg_illegal(args[i], "这个参数只能用于修饰-cp。"));
-
-			if (args[i]._Equal("-cover") || args[i]._Equal("-c")) cpCover = true;
-			if (args[i]._Equal("-filter")) cpFilter = true;
-			if (args[i]._Equal("-mask") || args[i]._Equal("-m")) cpMask = true;
-			if (args[i]._Equal("-force")) appForce = true;
-			if (args[i]._Equal("-f")) switch (ACP.top())
-			{
-			case 2: cpFilter = true; break;
-			case 4: appForce = true; break;
-			}
-		}
-		else if (args[i].find("-") == 0)
-		{
-			normal_ask = false;
-			if (!ARC.empty()) ARC.pop();
 
 			if (!ACP.empty() && (ACP.top() == 3 || ACP.top() == 4)) ACP.pop();
 			if (args[i]._Equal("--help")) help = true;
 			else if (args[i]._Equal("-del")) del = true;
 			else if (args[i]._Equal("-new")) crt = true;
 			else if (args[i]._Equal("-set")) set = true, ACP.push(1);
-			else if (args[i]._Equal("-cp")) cp = true, ACP.push(2), ARC.push(0);
+			else if (args[i]._Equal("-cp")) cp = true, ACP.push(2);
 			else if (args[i]._Equal("-era")) era = true, ACP.push(3);
-			else if (args[i]._Equal("-app")) app = true, ACP.push(4), ARC.push(1);
+			else if (args[i]._Equal("-app")) app = true, ACP.push(4);
 			else if (args[i]._Equal("-l")) list = true;
 			else if (args[i]._Equal("-all")) listAll = true;
 			else if (args[i]._Equal("-this-is-nid")) Nid = true;
+
+			else if (args[i]._Equal("-cover") || args[i]._Equal("-c"))
+			{
+				if (lastArg._Equal("-cp")) cpCover = true;
+				else throw (arg_illegal(args[i], "这个参数只能用于修饰-cp。"));
+			}
+			else if (args[i]._Equal("-filter"))
+			{
+				if (lastArg._Equal("-cp")) cpFilter = true;
+				else throw (arg_illegal(args[i], "这个参数只能用于修饰-cp。"));
+			}
+			else if (args[i]._Equal("-mask") || args[i]._Equal("-m"))
+			{
+				if (lastArg._Equal("-cp")) cpMask = true;
+				else throw (arg_illegal(args[i], "这个参数只能用于修饰-cp。"));
+			}
+			else if (args[i]._Equal("-force"))
+			{
+				if (lastArg._Equal("-app")) appForce = true;
+				else throw (arg_illegal(args[i], "这个参数只能用于修饰-app。"));
+			}
+			else if (args[i]._Equal("-f"))
+			{
+				if (lastArg._Equal("-cp")) cpFilter = true;
+				else if (lastArg._Equal("-app")) appForce = true;
+				else throw (arg_illegal(args[i], "这个参数只能用于修饰-cp或-app。"));
+			}
+
+			lastArg = args[i];
 		}
 		else
 		{
@@ -1410,7 +1428,7 @@ string ask(bool sudo, int type, int64_t qq, int64_t gid, vector<string> args)
 		throw (arg_not_found("-cp", "需要指定另一个问题。"));
 	if (cp) switch (1000 + (cpCover ? 100 : 0) + (cpFilter ? 10 : 0) + (cpMask ? 1 : 0))
 	{
-	case 1000: throw (arg_not_found("-cp", "需要指定复制模式（-cover、-filter、-mask）。"));
+	case 1000: cpFilter = true;
 	case 1110: throw (arg_use_same_time("-cover和-filter"));
 	case 1101: throw (arg_use_same_time("-cover和-mask"));
 	case 1011: throw (arg_use_same_time("-filter和-mask"));
@@ -1428,7 +1446,7 @@ string ask(bool sudo, int type, int64_t qq, int64_t gid, vector<string> args)
 		+ "-del\n删除该问题。\n\n"
 		+ "-new\n创建新的问题。" + (sudo ? "sudo：如果问题已经存在，则将其强制覆盖。" : "") + "\n\n"
 		+ "-set <属性>\n设置该问题的属性。目前可用的属性为readonly/editable（只读/可写）、listable/packaged（可见/封装）。\n\n"
-		+ "-cp <其他问题> <-cover/-filter/-mask>\n将其他问题的回答复制给当前问题。复制模式可以简写为-c、-f、-m。\n"
+		+ "-cp <其他问题> [-cover/-filter/-mask]\n将其他问题的回答复制给当前问题。复制模式可以简写为-c、-f、-m。默认使用filter模式。\n"
 		+ "-cover：复制前清除当前问题原有的回答\n"
 		+ "-filter：只复制并添加当前问题中没有的回答\n"
 		+ "-mask：直接将其他问题的所有回答添加到当前问题中\n\n"
@@ -1660,12 +1678,82 @@ string ask(bool sudo, int type, int64_t qq, int64_t gid, vector<string> args)
 
 	return Ly;
 }
-//	TODO：dnd指令
-//	TODO：help指令
+//	dnd指令
+string dnd(bool sudo, int type, int64_t qq, int64_t gid, vector<string> args)
+{
+	lastArgs[to_string(qq) + (gid == 0 ? "" : " in " + to_string(gid))] = args;
+	lastArgs["in " + to_string(gid)] = args;
+
+	string Ly = "";
+
+	User Who = User(qq);
+	Group Where = Group(gid);
+
+	bool help = false;
+	bool setStat = false;
+
+	/*  id = 0  */	int newStat = -1;
+
+	stack<int> ACP;
+	ACP.push(0);
+
+	for (int i = 1; i != args.size(); i++)
+	{
+		if (args[i].find("-") == 0)
+		{
+			if (args[i]._Equal("--help")) help = true;
+		}
+		else
+		{
+			anal(args[i]);
+			if (!ACP.empty())
+			{
+				switch (ACP.top())
+				{
+				case 0:
+					setStat = true;
+					if (args[i]._Equal("on")) newStat = 1;
+					else if (args[i]._Equal("off")) newStat = 0;
+					else throw (arg_illegal(args[i]), "只能使用 on 或 off 。");
+					break;
+				}
+				ACP.pop();
+			}
+		}
+	}
+}
+//	r指令
+string repeat(bool sudo, int type, int64_t qq, int64_t gid)
+{
+	vector<string> userLastArgs = lastArgs[to_string(qq) + (gid == 0 ? "" : " in " + to_string(gid))];
+	if (userLastArgs.size() == 0) return "";
+	else if (userLastArgs[0]._Equal("ls")) return ls(sudo, type, qq, gid, userLastArgs);
+	else if (userLastArgs[0]._Equal("d")) return d(sudo, type, qq, gid, userLastArgs);
+	else if (userLastArgs[0]._Equal("dm")) return dm(sudo, type, qq, gid, userLastArgs);
+	else if (userLastArgs[0]._Equal("setname")) return setname(sudo, type, qq, gid, userLastArgs);
+	else if (userLastArgs[0]._Equal("ask")) return ask(sudo, type, qq, gid, userLastArgs);
+	else if (userLastArgs[0]._Equal("dnd")) return dnd(sudo, type, qq, gid, userLastArgs);
+	else return "";
+}
+//	f指令
+string follow(bool sudo, int type, int64_t qq, int64_t gid)
+{
+	if (gid == 0) return "错误：指令 f 只在群/组内可用。";
+	vector<string> groupLastArgs = lastArgs["in " + to_string(gid)];
+	if (groupLastArgs.size() == 0) return "";
+	else if (groupLastArgs[0]._Equal("ls")) return ls(sudo, type, qq, gid, groupLastArgs);
+	else if (groupLastArgs[0]._Equal("d")) return d(sudo, type, qq, gid, groupLastArgs);
+	else if (groupLastArgs[0]._Equal("dm")) return dm(sudo, type, qq, gid, groupLastArgs);
+	else if (groupLastArgs[0]._Equal("setname")) return setname(sudo, type, qq, gid, groupLastArgs);
+	else if (groupLastArgs[0]._Equal("ask")) return ask(sudo, type, qq, gid, groupLastArgs);
+	else if (groupLastArgs[0]._Equal("dnd")) return dnd(sudo, type, qq, gid, groupLastArgs);
+	else return "";
+}
 
 
 
 ///	【紧急补丁】
+
 //	黑名单
 class BlackListUnit
 {
@@ -1737,6 +1825,8 @@ void run_main(int type, int64_t qq, int64_t gid, string msg)
 	else if (args[0]._Equal("d"));
 	else if (args[0]._Equal("dm"));
 	else if (args[0]._Equal("ask"));
+	else if (args[0]._Equal("r"));
+	else if (args[0]._Equal("f"));
 	else return;
 
 	if (sudo)
@@ -1790,7 +1880,7 @@ void run_main(int type, int64_t qq, int64_t gid, string msg)
 			CCC += to_string(now.tm_sec) + " ";
 			CCC += to_string(qq);
 			if (type == GRP) CCC += " in " + to_string(gid);
-			PostMsg(type, (type == PVT ? qq : gid), "QQ " + to_string(qq) + " 不在 sudoers 文件中。此事将被报告。");
+			sendMsg(type, (type == PVT ? qq : gid), "QQ " + to_string(qq) + " 不在 sudoers 文件中。此事将被报告。");
 		}
 
 		if (!CCC.empty())
@@ -1875,7 +1965,7 @@ void run_main(int type, int64_t qq, int64_t gid, string msg)
 	}
 	catch (exception Ed)
 	{
-		PostMsg(type, (type == PVT ? qq : gid), Ed.what());
+		sendMsg(type, (type == PVT ? qq : gid), Ed.what());
 		return;
 	}
 
@@ -1888,7 +1978,7 @@ void run_main(int type, int64_t qq, int64_t gid, string msg)
 			{
 				Ly += "\nargv[" + to_string(i) + "] = " + args[i];
 			}
-			PostMsg(type, (type == PVT ? qq : gid), Ly);
+			sendMsg(type, (type == PVT ? qq : gid), Ly);
 			return;
 		}
 		else if (args[0]._Equal("ls")) Ly += ls(sudo, type, qq, gid, args);
@@ -1896,6 +1986,9 @@ void run_main(int type, int64_t qq, int64_t gid, string msg)
 		else if (args[0]._Equal("dm")) Ly += dm(sudo, type, qq, gid, args);
 		else if (args[0]._Equal("setname")) Ly += setname(sudo, type, qq, gid, args);
 		else if (args[0]._Equal("ask")) Ly += ask(sudo, type, qq, gid, args);
+		else if (args[0]._Equal("dnd")) Ly += dnd(sudo, type, qq, gid, args);
+		else if (args[0]._Equal("r")) Ly += repeat(sudo, type, qq, gid);
+		else if (args[0]._Equal("f")) Ly += follow(sudo, type, qq, gid);
 	}
 	catch (exception Ed)
 	{
@@ -1907,6 +2000,6 @@ void run_main(int type, int64_t qq, int64_t gid, string msg)
 	if (*(Ly.end() - 1) == '\n') Ly.erase(Ly.end() - 1);
 	if (*Ly.begin() == '\n') Ly.erase(0, 1);
 	if (sudo) Ly = sudoStr + Ly;
-	PostMsg(type, (type == PVT ? qq : gid), Ly);
+	sendMsg(type, (type == PVT ? qq : gid), Ly);
 	return;
 }
