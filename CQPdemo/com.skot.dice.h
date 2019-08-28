@@ -1428,7 +1428,7 @@ string ask(bool sudo, int type, int64_t qq, int64_t gid, vector<string> args)
 		throw (arg_not_found("-cp", "需要指定另一个问题。"));
 	if (cp) switch (1000 + (cpCover ? 100 : 0) + (cpFilter ? 10 : 0) + (cpMask ? 1 : 0))
 	{
-	case 1000: cpFilter = true;
+	case 1000: cpFilter = true; break;
 	case 1110: throw (arg_use_same_time("-cover和-filter"));
 	case 1101: throw (arg_use_same_time("-cover和-mask"));
 	case 1011: throw (arg_use_same_time("-filter和-mask"));
